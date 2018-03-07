@@ -1,5 +1,9 @@
 # Created by https://www.gitignore.io/api/java,linux,macos,maven,windows,eclipse,intellij+iml
 
+### Personal ###
+
+downloads/
+
 ### Eclipse ###
 
 .metadata

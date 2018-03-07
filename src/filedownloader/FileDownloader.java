@@ -60,9 +60,13 @@ public class FileDownloader {
         in.close();
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         FileDownloader fd = new FileDownloader();
-        fd.process(downloadFilePath);
-        fd.parser(pathOutput + "/" + filename);
+        try {
+            fd.process(downloadFilePath);
+            fd.parser(pathOutput + "/" + filename);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

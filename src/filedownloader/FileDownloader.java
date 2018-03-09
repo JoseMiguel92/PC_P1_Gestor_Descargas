@@ -30,22 +30,25 @@ public class FileDownloader {
         while ((line = reader.readLine()) != null) {
             String[] parts = line.split(" ");
             if (parts.length >= 2) {
-                if (!map.containsKey(parts[1])) {
-                    key = parts[1];
-                    values = new ArrayList<>();
+                if ((!map.containsKey(parts[1]) && map.size() > 0)) {
+                    splitAndMerge.mergeFile(pathOutput, key);
+                    for (int i = 0; i < map.get(key).size(); i++) {
+                        Path pathParts = Paths.get(pathOutput + "/" + Paths.get(key + ".part" + i));
+                        Files.deleteIfExists(pathParts);
+                    }
                 }
+                key = parts[1];
+                values = new ArrayList<>();
             } else {
                 values.add(parts[0]);
                 process(parts[0]);
                 map.put(key, values);
             }
         }
-        for (Map.Entry<String, List<String>> e : map.entrySet()) {
-            splitAndMerge.mergeFile(pathOutput, e.getKey());
-            for (int i = 0; i < e.getValue().size(); i++) {
-                Path pathParts = Paths.get(pathOutput + "/" + Paths.get(e.getKey() + ".part" + i));
-                Files.deleteIfExists(pathParts);
-            }
+        splitAndMerge.mergeFile(pathOutput, key);
+        for (int i = 0; i < map.get(key).size(); i++) {
+            Path pathParts = Paths.get(pathOutput + "/" + Paths.get(key + ".part" + i));
+            Files.deleteIfExists(pathParts);
         }
         reader.close();
     }

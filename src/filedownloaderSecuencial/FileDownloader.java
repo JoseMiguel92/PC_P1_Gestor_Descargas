@@ -1,4 +1,4 @@
-package filedownloader;
+package filedownloaderSecuencial;
 
 import java.io.*;
 import java.net.URL;

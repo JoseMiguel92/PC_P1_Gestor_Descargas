@@ -6,7 +6,7 @@ public class Main {
     private static final String downloadFilePath = "https://github.com/jesussanchezoro/PracticaPC/raw/master/descargas.txt";
 
     public static void main(String[] args) {
-        int maxDownloads = 2;
+        int maxDownloads = 10;
         FileDownloader fd = new FileDownloader(maxDownloads);
         System.out.println("Iniciando descargas...");
         try {

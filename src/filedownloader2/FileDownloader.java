@@ -49,14 +49,15 @@ public class FileDownloader {
         in.close();
         List<Fichero> parsedFile = parser(filename);
         for (Fichero fichero : parsedFile) {
-            this.countDownLatch = new CountDownLatch(fichero.getNumberOfParts());
+            this.countDownLatch = new CountDownLatch(fichero.getParts().size());
             for (String part : fichero.getParts()) {
-                System.out.println("Blocking");
+                System.out.println("Metida la parte(" + part + ")en la blockingQueue.");
                 this.blockingQueue.put(part);
             }
             this.countDownLatch.await();
+
             //Mergeo las partes
-            parsedFile.forEach(fich -> splitAndMerge.mergeFile(pathOutput, fich.getFilename()));
+            splitAndMerge.mergeFile(pathOutput, fichero.getFilename());
 
             //Borro las partes
             deleteFiles(parsedFile);
@@ -71,52 +72,46 @@ public class FileDownloader {
         String line;
         List<Fichero> allFiles = new ArrayList<>();
         String fichName = null;
+        int index = -1;
         List<String> partsOfFile = null;
         while (scanner.hasNextLine()) {
             line = scanner.nextLine();
             String[] parts = line.split(" ");
             if (parts.length > 1) {
-                if (fichName == null) {
-                    fichName = parts[1];
-                    partsOfFile = new ArrayList<>();
-                } else {
-                    Fichero file = new Fichero(fichName, partsOfFile);
-                    allFiles.add(file);
-                    System.out.println("Añadido fichero: " + fichName);
-                    fichName = parts[1];
-                    partsOfFile = new ArrayList<>();
-                }
+                index = index + 1;
+                partsOfFile = new ArrayList<>();
+                fichName = parts[1];
+                Fichero file = new Fichero(fichName, partsOfFile);
+                allFiles.add(file);
+                System.out.println("Añadido fichero: " + fichName);
             } else {
-                partsOfFile.add(parts[0]);
+                System.out.println("Añadiendo " + parts[0] + " al fichero: " + fichName);
+                allFiles.get(index).getParts().add(parts[0]);
             }
         }
-        Fichero file = new Fichero(fichName, partsOfFile);
-        allFiles.add(file);
-        System.out.println("Añadido fichero: " + fichName);
         scanner.close();
         return allFiles;
     }
 
     private void download() throws IOException, InterruptedException {
         while (true) {
-            String url = this.blockingQueue.take();
-            System.out.println("DESCARGANDO: " + url);
-            URL website = new URL(url);
+            String urlToDownload = this.blockingQueue.take();
+            System.out.println("Descargando: " + urlToDownload);
+            URL website = new URL(urlToDownload);
             InputStream in = website.openStream();
-            Path pathOut = Paths.get(pathOutput + "/" + getNameFile(url));
+            Path pathOut = Paths.get(pathOutput + "/" + getNameFile(urlToDownload));
             Files.copy(in, pathOut, StandardCopyOption.REPLACE_EXISTING);
             in.close();
             //TODO ESPERO PARA COMPROBAR QUE FUNCIONA
             Thread.sleep(2000);
+            System.out.println("Terminada(" + urlToDownload + ")");
             this.countDownLatch.countDown();
-            System.out.println("TERMINADO: " + url);
-
         }
     }
 
     private void deleteFiles(List<Fichero> parsedFile) throws IOException {
         for (Fichero fich : parsedFile) {
-            for (int i = 0; i < fich.getNumberOfParts(); i++) {
+            for (int i = 0; i < fich.getParts().size(); i++) {
                 Path pathParts = Paths.get(pathOutput + "/" + Paths.get(fich.getFilename() + ".part" + i));
                 Files.deleteIfExists(pathParts);
             }
